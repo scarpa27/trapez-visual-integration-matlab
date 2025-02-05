@@ -2,26 +2,28 @@ function trapez()
 
 x_limit_low = 0;
 x_limit_high = 5;
-x_num_steps_initial = 6;
 x_num_steps_min = 2;
-x_num_steps_max = 200;
+x_num_steps_max = 100;
 real_area = integral((@(x) x.^2), x_limit_low, x_limit_high);
+
+log_base=3;
+log_min = log(x_num_steps_min)/log(log_base);
+log_max = log(x_num_steps_max)/log(log_base);
+
+x_num_steps_initial = (log_max+log_min)/2;
 
 
 figure('Name', 'Interaktivna integracija');
 ax = axes;
 
 %slider
-log_min = log(x_num_steps_min)/log(2);
-log_max = log(x_num_steps_max)/log(2);
-
 s_width = 0.6;
 s_pos = [(1 - s_width)/2, 0.05, s_width, 0.05];
 slider = uicontrol('Style', 'slider',...
-    'Min', x_num_steps_min, 'Max', x_num_steps_max,...
+    'Min', log_min, 'Max', log_max,...
     'Value', x_num_steps_initial,...
     'Units', 'normalized', 'Position', s_pos);
-slider.Callback = @(source,event) update_plot(ax, source, x_limit_low, x_limit_high, real_area);
+slider.Callback = @(source,event) update_plot(ax, source, x_limit_low, x_limit_high, real_area, log_base);
 
 % gumbovi + -
 b_width = 0.1;
@@ -31,30 +33,37 @@ subtract_button = uicontrol('Style', 'pushbutton',...
         'String', '-',...
         'Units', 'normalized',...
         'Position', [s_pos(1) - b_width, 0.05, b_width, b_height],...
-        'Callback', @(source,event) adjust_steps(slider, -1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area));
- add_button = uicontrol('Style', 'pushbutton',...
+        'Callback', @(source,event) adjust_steps(slider, -1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
+add_button = uicontrol('Style', 'pushbutton',...
         'String', '+',...
         'Units', 'normalized',...
         'Position', [s_pos(1) + s_width, 0.05, b_width, b_height],...
-        'Callback', @(source,event) adjust_steps(slider, 1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area));
-    function adjust_steps(slider, step_change, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area)
-        current_steps = get(slider, 'Value');
+        'Callback', @(source,event) adjust_steps(slider, 1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
+
+    function adjust_steps(slider, step_change, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base)
+        log_steps = get(slider, 'Value');
+        current_steps = log_base^log_steps;
+
         new_steps = round(current_steps + step_change);
 
         % Keep within min/max limits
         new_steps = max(x_num_steps_min, min(x_num_steps_max, new_steps));
 
-        set(slider, 'Value', new_steps);
-        update_plot(ax, slider, x_limit_low, x_limit_high, real_area);
+        log_steps = log(new_steps)/log(log_base);
+        set(slider, 'Value', log_steps);
+        update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
     end
 
 
 % početna slika
-update_plot(ax, slider, x_limit_low, x_limit_high, real_area);
+update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
 
 
-function update_plot(ax, source, x_limit_low, x_limit_high, real_area)
-    x_num_steps = round(get(source,'Value'));
+    function update_plot(ax, source, x_limit_low, x_limit_high, real_area, log_base)
+    log_val = get(source,'Value'); % 0 - logbase(maxstep)
+    x_num_steps = round(log_base^log_val);
+    set(source,'Value', (log(x_num_steps)/log(log_base)));
+
 
     x_step_diff = (x_limit_high-x_limit_low)/x_num_steps;
     x = x_limit_low : x_step_diff : x_limit_high;
