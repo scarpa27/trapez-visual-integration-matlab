@@ -1,10 +1,12 @@
-function trapez()
+function trapez(f_string)
+
+fun = str2func(append('@(x) ', f_string));
 
 x_limit_low = 0;
 x_limit_high = 5;
 x_num_steps_min = 2;
 x_num_steps_max = 100;
-real_area = integral((@(x) x.^2), x_limit_low, x_limit_high);
+real_area = integral(fun, x_limit_low, x_limit_high);
 
 log_base=3;
 log_min = log(x_num_steps_min)/log(log_base);
@@ -23,24 +25,24 @@ slider = uicontrol('Style', 'slider',...
     'Min', log_min, 'Max', log_max,...
     'Value', x_num_steps_initial,...
     'Units', 'normalized', 'Position', s_pos);
-slider.Callback = @(source,event) update_plot(ax, source, x_limit_low, x_limit_high, real_area, log_base);
+slider.Callback = @(source,event) update_plot(fun, ax, source, x_limit_low, x_limit_high, real_area, log_base);
 
 % gumbovi + -
 b_width = 0.1;
 b_height = 0.05;
 
-subtract_button = uicontrol('Style', 'pushbutton',...
+uicontrol('Style', 'pushbutton',...
         'String', '-',...
         'Units', 'normalized',...
         'Position', [s_pos(1) - b_width, 0.05, b_width, b_height],...
-        'Callback', @(source,event) adjust_steps(slider, -1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
-add_button = uicontrol('Style', 'pushbutton',...
+        'Callback', @(source,event) adjust_steps(fun, slider, -1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
+uicontrol('Style', 'pushbutton',...
         'String', '+',...
         'Units', 'normalized',...
         'Position', [s_pos(1) + s_width, 0.05, b_width, b_height],...
-        'Callback', @(source,event) adjust_steps(slider, 1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
+        'Callback', @(source,event) adjust_steps(fun, slider, 1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
 
-    function adjust_steps(slider, step_change, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base)
+    function adjust_steps(fun, slider, step_change, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base)
         log_steps = get(slider, 'Value');
         current_steps = log_base^log_steps;
 
@@ -51,15 +53,15 @@ add_button = uicontrol('Style', 'pushbutton',...
 
         log_steps = log(new_steps)/log(log_base);
         set(slider, 'Value', log_steps);
-        update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
+        update_plot(fun, ax, slider, x_limit_low, x_limit_high, real_area, log_base);
     end
 
 
 % početna slika
-update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
+update_plot(fun, ax, slider, x_limit_low, x_limit_high, real_area, log_base);
 
 
-    function update_plot(ax, source, x_limit_low, x_limit_high, real_area, log_base)
+    function update_plot(fun, ax, source, x_limit_low, x_limit_high, real_area, log_base)
     log_val = get(source,'Value'); % 0 - logbase(maxstep)
     x_num_steps = round(log_base^log_val);
     set(source,'Value', (log(x_num_steps)/log(log_base)));
@@ -67,11 +69,11 @@ update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
 
     x_step_diff = (x_limit_high-x_limit_low)/x_num_steps;
     x = x_limit_low : x_step_diff : x_limit_high;
-    y = x.^2;
+    y = fun(x);
 
     cla(ax);  % Očisti staru sliku!!
 
-    fplot(ax, @(x) x.^2, [x_limit_low, x_limit_high], 'Color', 'b', 'LineWidth', 1); % prava krivulja
+    fplot(ax, fun, [x_limit_low, x_limit_high], 'Color', 'b', 'LineWidth', 1); % prava krivulja
     hold(ax, 'on');
 
     p = area(x,y, 'Parent', ax);
@@ -90,9 +92,9 @@ update_plot(ax, slider, x_limit_low, x_limit_high, real_area, log_base);
     end
     hold(ax, 'off');
 
-    text(ax, 0.05*(x_limit_high-x_limit_low), 0.9*max(y),  sprintf('%*s%.8g', 17, 'Površina = ', A),               'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w');
-    text(ax, 0.05*(x_limit_high-x_limit_low), 0.85*max(y), sprintf('%*s%.8g', 17, 'Točna površina = ', real_area), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w');
-    text(ax, 0.05*(x_limit_high-x_limit_low), 0.8*max(y),  sprintf('%*s%d', 17,   'broj trapeza = ', x_num_steps), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w');
+    text(ax, -0.05, 0.8,  sprintf('%*s%.8g', 17, 'Površina = ', A),               'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
+    text(ax, -0.05, 0.75, sprintf('%*s%.8g', 17, 'Točna površina = ', real_area), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
+    text(ax, -0.05, 0.7,  sprintf('%*s%d', 17,   'broj trapeza = ', x_num_steps), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
    
 end
 
