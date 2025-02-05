@@ -1,12 +1,23 @@
 function trapez(f_string)
 
-fun = str2func(append('@(x) ', f_string));
+
 
 x_limit_low = 0;
 x_limit_high = 5;
 x_num_steps_min = 2;
 x_num_steps_max = 100;
-real_area = integral(fun, x_limit_low, x_limit_high);
+
+
+s = sym('s');
+x_axis = @(x) 0;
+fun = str2func(append('@(x) ', f_string));
+% real_area = integral(@(x) fun(x)-x_axis(x), x_limit_low, x_limit_high);
+
+rafun1 = str2func(append('@(s) ', replace(f_string, 'x', 's') ));
+rafun2 = (@(s) (-(s.^2)+5));
+rafun2 = (@(s) s.^2-1);
+
+real_area = get_real_area(rafun1, rafun2);
 
 log_base=3;
 log_min = log(x_num_steps_min)/log(log_base);
@@ -96,7 +107,21 @@ update_plot(fun, ax, slider, x_limit_low, x_limit_high, real_area, log_base);
     text(ax, -0.05, 0.75, sprintf('%*s%.8g', 17, 'Točna površina = ', real_area), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
     text(ax, -0.05, 0.7,  sprintf('%*s%d', 17,   'broj trapeza = ', x_num_steps), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
    
-end
+    end
+
+    function area = get_real_area (f, g)
+        area = 0;
+
+        r = sort(solve(f(s) == g(s), s));
+        r = [x_limit_low, r', x_limit_high];
+        r = r(r >= x_limit_low & r <= x_limit_high);
+        r = double(r);
+
+        for i = 1 : length(r)-1
+            a = integral(@(s) abs(f(s) - g(s)), r(i), r(i+1));
+            area = area + a;
+        end
+    end
 
 
 
