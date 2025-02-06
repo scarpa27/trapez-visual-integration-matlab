@@ -1,6 +1,5 @@
 function trapez(f_string, g_string, varargin)
 
-
 if isempty(f_string)
     f_string = 'x.^2';
 end
@@ -20,13 +19,12 @@ end
 
 
 s = sym('s');
-x_axis = @(x) 0;
-fun = str2func(append('@(x) ', f_string));
-gun = str2func(append('@(x) ', g_string));
+fun = str2func(append('@(x) ', f_string)); % sym funkcija
+gun = str2func(append('@(x) ', g_string)); % sym funkcija
 
+% funkcije za računanje prave površine
 ra_fun = str2func(append('@(s) ', replace(f_string, 'x', 's') ));
 ra_gun = str2func(append('@(s) ', replace(g_string, 'x', 's') ));
-
 real_area = get_real_area(ra_fun, ra_gun);
 
 log_base=3;
@@ -41,7 +39,7 @@ ax = axes;
 
 %slider
 s_width = 0.6;
-s_pos = [(1 - s_width)/2, 0.05, s_width, 0.05];
+s_pos = [(1 - s_width)/2, 0.02, s_width, 0.05];
 slider = uicontrol('Style', 'slider',...
     'Min', log_min, 'Max', log_max,...
     'Value', x_num_steps_initial,...
@@ -55,12 +53,12 @@ b_height = 0.05;
 uicontrol('Style', 'pushbutton',...
         'String', '-',...
         'Units', 'normalized',...
-        'Position', [s_pos(1) - b_width, 0.05, b_width, b_height],...
+        'Position', [s_pos(1) - b_width, 0.02, b_width, b_height],...
         'Callback', @(source,event) adjust_steps(fun, gun, slider, -1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
 uicontrol('Style', 'pushbutton',...
         'String', '+',...
         'Units', 'normalized',...
-        'Position', [s_pos(1) + s_width, 0.05, b_width, b_height],...
+        'Position', [s_pos(1) + s_width, 0.02, b_width, b_height],...
         'Callback', @(source,event) adjust_steps(fun, gun, slider, 1, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base));
 
     function adjust_steps(fun, gun, slider, step_change, x_num_steps_min, x_num_steps_max, ax, x_limit_low, x_limit_high, real_area, log_base)
@@ -77,10 +75,8 @@ uicontrol('Style', 'pushbutton',...
         update_plot(fun, gun, ax, slider, x_limit_low, x_limit_high, real_area, log_base);
     end
 
-
 % početna slika
 update_plot(fun, gun, ax, slider, x_limit_low, x_limit_high, real_area, log_base);
-
 
     function update_plot(fun, gun, ax, source, x_limit_low, x_limit_high, real_area, log_base)
     log_val = get(source,'Value'); % 0 - logbase(maxstep)
@@ -122,18 +118,17 @@ update_plot(fun, gun, ax, slider, x_limit_low, x_limit_high, real_area, log_base
     end
     hold(ax, 'off');
 
-    text(ax, -0.05, 0.8,  sprintf('%*s%.8g', 17, 'Površina = ', A),               'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
-    text(ax, -0.05, 0.75, sprintf('%*s%.8g', 17, 'Točna površina = ', real_area), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
-    text(ax, -0.05, 0.7,  sprintf('%*s%d', 17,   'broj trapeza = ', x_num_steps), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
-   
+    text(ax, -0.165, 0.84,  sprintf('%*s%.8g', 17, 'Površina = ', A),               'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
+    text(ax, -0.165, 0.79, sprintf('%*s%.8g', 17, 'Točna površina = ', real_area), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
+    text(ax, -0.165, 0.74,  sprintf('%*s%d', 17,   'broj trapeza = ', x_num_steps), 'FontName', 'Courier New', 'FontSize', 12, 'BackgroundColor', 'w', 'Units', 'Normalized');
     end
 
     function area = get_real_area (f, g)
         area = 0;
 
         r = sort(solve(f(s) == g(s), s));
-        r = [x_limit_low, r', x_limit_high]
-        r = r(imag(r)==0)
+        r = [x_limit_low, r', x_limit_high];
+        r = r(imag(r)==0);
         r = r(r >= x_limit_low & r <= x_limit_high);
         r = double(r);
 
@@ -158,6 +153,4 @@ update_plot(fun, gun, ax, slider, x_limit_low, x_limit_high, real_area, log_base
          end
     end
 
-
-
-end
+end % clear; clc; trapez('-x.^2+3', 'sin(3.*x)', -5, 5);
